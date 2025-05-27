@@ -135,7 +135,7 @@ def send_api_request_with_selected_text():
     try:
         start_time = time.time()
         completion = client.chat.completions.create(
-            model="deepseek/deepseek-r1:free",
+            model="deepseek/deepseek-chat-v3-0324:free",
             messages=[{"role": "user", "content": prompt}],
         )
         result = completion.choices[0].message.content.strip()
