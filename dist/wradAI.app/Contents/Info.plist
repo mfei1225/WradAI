@@ -11,7 +11,7 @@
 	<key>CFBundleIconFile</key>
 	<string>PythonApplet.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.pythonmac.unspecified.wradAI</string>
+	<string>com.yourdomain.wradAI</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -26,6 +26,14 @@
 	<string>0.1.0</string>
 	<key>LSHasLocalizedDisplayName</key>
 	<false/>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>wradAI needs keyboard access to detect your hotkey.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>wradAI uses AppleScript to copy and paste selected text.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Required for keyboard access</string>
 	<key>NSAppleScriptEnabled</key>
 	<false/>
 	<key>NSHumanReadableCopyright</key>
@@ -34,6 +42,8 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSSystemAdministrationUsageDescription</key>
+	<string>Required for keyboard access</string>
 	<key>PyMainFileNames</key>
 	<array>
 		<string>__boot__</string>

@@ -1,35 +1,98 @@
-import sys
 import threading
 import time
 import subprocess
 import os
-from pathlib import Path
 from pynput import keyboard
-from dotenv import load_dotenv
-
-from AppKit import (
-    NSApplication, NSWindow, NSTextField, NSButton, NSMakeRect,
-    NSTitledWindowMask, NSClosableWindowMask, NSResizableWindowMask,
-    NSBackingStoreBuffered, NSPasteboard, NSStringPboardType
-)
-from Foundation import NSObject
-from PyObjCTools import AppHelper
+from AppKit import NSPasteboard, NSStringPboardType
 from openai import OpenAI
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, 
+                            QLineEdit, QPushButton, QVBoxLayout,
+                            QWidget, QMessageBox)
+from PyQt5.QtCore import Qt, QTimer
+import json
+import os.path
+import sys
 
-# Load env if needed
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+# Configuration file path
+CONFIG_FILE = os.path.expanduser("~/.wradAI_config.json")
 
-# Global OpenAI client placeholder
+def load_api_key():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                config = json.load(f)
+                return config.get('api_key', '')
+        except json.JSONDecodeError:
+            return ""
+    return ""
+
+def save_api_key(api_key):
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump({'api_key': api_key}, f)
+
+# Initialize client
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=""  # Leave blank initially; will be set from GUI
+    api_key=load_api_key()
 )
+
+class ApiKeyWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("OpenRouter API Key Configuration")
+        self.setFixedSize(400, 150)
+        
+        # Central widget
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        # Layout
+        layout = QVBoxLayout()
+        central_widget.setLayout(layout)
+        
+        # Label
+        label = QLabel("Enter your OpenRouter API Key:")
+        layout.addWidget(label)
+        
+        # API Key Entry
+        self.api_key_entry = QLineEdit()
+        self.api_key_entry.setPlaceholderText("Paste your API key here")
+        self.api_key_entry.setEchoMode(QLineEdit.Password)
+        self.api_key_entry.setText(load_api_key())
+        layout.addWidget(self.api_key_entry)
+        
+        # Save Button
+        save_button = QPushButton("Save & Start")
+        save_button.clicked.connect(self.save_and_start)
+        layout.addWidget(save_button)
+        
+        # Center the window
+        self.center()
+    
+    def center(self):
+        frame = self.frameGeometry()
+        center_point = QApplication.desktop().availableGeometry().center()
+        frame.moveCenter(center_point)
+        self.move(frame.topLeft())
+    
+    def save_and_start(self):
+        api_key = self.api_key_entry.text().strip()
+        if not api_key:
+            QMessageBox.warning(self, "Warning", "API key cannot be empty!")
+            return
+        
+        save_api_key(api_key)
+        client.api_key = api_key
+        self.close()
+        QMessageBox.information(self, "Success", "API key saved successfully!")
+        
+        # Start the keyboard listener in a separate thread
+        threading.Thread(target=start_keyboard_listener, daemon=True).start()
 
 # Key combination: Ctrl+Shift+A
 COMBINATION = {keyboard.Key.ctrl_l, keyboard.Key.shift, keyboard.KeyCode.from_char('a')}
 current_keys = set()
 
-# Clipboard utils
 def get_clipboard_text():
     pb = NSPasteboard.generalPasteboard()
     content = pb.stringForType_(NSStringPboardType)
@@ -40,7 +103,6 @@ def set_clipboard_text(text):
     pb.clearContents()
     pb.setString_forType_(text, NSStringPboardType)
 
-# MacOS keyboard simulation via AppleScript
 def copy_selection():
     subprocess.run(['osascript', '-e', 'tell application "System Events" to keystroke "c" using command down'])
     time.sleep(0.1)
@@ -52,10 +114,9 @@ def move_cursor_to_end_of_selection():
 def paste_clipboard():
     subprocess.run(['osascript', '-e', 'tell application "System Events" to keystroke "v" using command down'])
 
-# API logic
 def send_api_request_with_selected_text():
     if not client.api_key:
-        print("❗ API key not set. Please enter it in the window.")
+        print("❗ API key not set.")
         return
 
     selected_text = copy_selection()
@@ -64,16 +125,17 @@ def send_api_request_with_selected_text():
         return
 
     prompt = (
-        "You are an attending in a family medicine clinic. "
+        "You are an attending in a Emergency medicine clinic. "
         "Help me write a SOAP note. I am going to give the subjective and objective findings "
         "of a patient. You will provide the Assessment and Plan for the patient.\n\n"
+        "Output the format in plain text, with each section on a new line\n"
         f"Subjective and Objective: {selected_text}"
     )
 
     try:
         start_time = time.time()
         completion = client.chat.completions.create(
-            model="openai/gpt-3.5-turbo",
+            model="meta-llama/llama-3.2-1b-instruct:free",
             messages=[{"role": "user", "content": prompt}],
         )
         result = completion.choices[0].message.content.strip()
@@ -84,71 +146,45 @@ def send_api_request_with_selected_text():
         time.sleep(0.05)
         paste_clipboard()
     except Exception as e:
+        set_clipboard_text("Error: API request failed. Please try again.")
+        time.sleep(0.05)
+        move_cursor_to_end_of_selection()
+        time.sleep(0.05)
+        paste_clipboard()
         print(f"⚠️ API Error: {e}")
 
-# Hotkey handling
 def on_press(key):
     current_keys.add(key)
     if all(k in current_keys for k in COMBINATION):
-        threading.Thread(target=send_api_request_with_selected_text).start()
+        threading.Thread(target=send_api_request_with_selected_text, daemon=True).start()
 
 def on_release(key):
     current_keys.discard(key)
 
 def start_keyboard_listener():
+    print("🔁 Starting keyboard listener...")
     with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
 
-# macOS AppDelegate
-class AppDelegate(NSObject):
-    def applicationDidFinishLaunching_(self, notification):
-        self.window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(100.0, 100.0, 400.0, 150.0),
-            NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask,
-            NSBackingStoreBuffered,
-            False
-        )
-        self.window.setTitle_("Enter API Key")
-
-        # Label
-        label = NSTextField.alloc().initWithFrame_(NSMakeRect(20, 90, 360, 24))
-        label.setStringValue_("Enter your API key:")
-        label.setBezeled_(False)
-        label.setDrawsBackground_(False)
-        label.setEditable_(False)
-        label.setSelectable_(False)
-        self.window.contentView().addSubview_(label)
-
-        # Text field
-        self.api_key_field = NSTextField.alloc().initWithFrame_(NSMakeRect(20, 60, 360, 24))
-        self.window.contentView().addSubview_(self.api_key_field)
-
-        # Button
-        button = NSButton.alloc().initWithFrame_(NSMakeRect(150, 20, 100, 30))
-        button.setTitle_("Submit")
-        button.setBezelStyle_(4)
-        button.setTarget_(self)
-        button.setAction_("submitClicked:")
-        self.window.contentView().addSubview_(button)
-
-        self.window.makeKeyAndOrderFront_(None)
-
-    def submitClicked_(self, sender):
-        api_key = self.api_key_field.stringValue()
-        client.api_key = api_key
-        print("✅ API key set.")
-        self.window.orderOut_(None)
-
-# Main launcher
-def main():
-    # Start keyboard listener in background
-    threading.Thread(target=start_keyboard_listener, daemon=True).start()
-
-    # Start macOS GUI app
-    app = NSApplication.sharedApplication()
-    delegate = AppDelegate.alloc().init()
-    app.setDelegate_(delegate)
-    AppHelper.runEventLoop()
+class Application:
+    def __init__(self):
+        self.app = QApplication(sys.argv)
+        
+        if not load_api_key():
+            self.window = ApiKeyWindow()
+            self.window.show()
+        else:
+            # Start keyboard listener in background
+            threading.Thread(target=start_keyboard_listener, daemon=True).start()
+            
+            # Create a hidden window to keep the app running
+            self.window = QMainWindow()
+            self.window.setWindowFlags(Qt.WindowDoesNotAcceptFocus | Qt.WindowStaysOnTopHint)
+            self.window.resize(1, 1)
+            self.window.move(-100, -100)
+            self.window.show()
+        
+        sys.exit(self.app.exec_())
 
 if __name__ == "__main__":
-    main()
+    Application()
