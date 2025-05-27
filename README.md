@@ -1,4 +1,5 @@
 # 🧠 wradAI 
+open app in dist/wradAI
 Press Ctrl + Shift + A to generate Note
 
 ## 🛠 Setup & Build Instructions
