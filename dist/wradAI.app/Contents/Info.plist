@@ -9,7 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>wradAI</string>
 	<key>CFBundleIconFile</key>
-	<string>PythonApplet.icns</string>
+	<string>wradAI</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.yourdomain.wradAI</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -73,17 +73,16 @@
 	<array/>
 	<key>PyRuntimeLocations</key>
 	<array>
-		<string>@executable_path/../Frameworks/Python3.framework/Versions/3.9/Python3</string>
+		<string>@executable_path/../Frameworks/libpython3.11.dylib</string>
 	</array>
 	<key>PythonInfoDict</key>
 	<dict>
 		<key>PythonExecutable</key>
-		<string>/Users/MKF55412/wradAI/env/bin/python</string>
+		<string>/Users/MKF55412/WradAI/venv/bin/python</string>
 		<key>PythonLongVersion</key>
-		<string>3.9.6 (default, Nov 11 2024, 03:15:38) 
-[Clang 16.0.0 (clang-1600.0.26.6)]</string>
+		<string>3.11.5 (main, Sep 11 2023, 08:31:25) [Clang 14.0.6 ]</string>
 		<key>PythonShortVersion</key>
-		<string>3.9</string>
+		<string>3.1</string>
 		<key>py2app</key>
 		<dict>
 			<key>alias</key>

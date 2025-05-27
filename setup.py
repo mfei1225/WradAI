@@ -1,4 +1,5 @@
 from setuptools import setup
+import os
 
 APP = ['wradAI.py']
 DATA_FILES = []
@@ -17,10 +18,15 @@ OPTIONS = {
         'objc',
         'PyQt5.QtCore',
         'PyQt5.QtWidgets',
-        'PyQt5.QtGui'
+        'PyQt5.QtGui',
+        'ssl',  # Needed for OpenSSL usage
+        'ctypes.macholib.dyld',  # Needed for _ctypes import error
     ],
-    'excludes': [
-        'tkinter'  # Remove if you're not using Tkinter
+    'excludes': ['tkinter'],
+    'frameworks': [
+        '/opt/homebrew/opt/libffi/lib/libffi.dylib',
+        '/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib',
+        '/opt/homebrew/opt/openssl@3/lib/libcrypto.3.dylib'
     ],
     'plist': {
         'CFBundleName': 'wradAI',
@@ -30,7 +36,7 @@ OPTIONS = {
         'CFBundleShortVersionString': '0.1.0',
         'NSAppleEventsUsageDescription': 'wradAI uses AppleScript to copy and paste selected text.',
         'NSAccessibilityUsageDescription': 'wradAI needs keyboard access to detect your hotkey.',
-        'LSUIElement': True,  # Changed to True for background app without dock icon
+        'LSUIElement': True,
         'NSAppleMusicUsageDescription': 'Required for keyboard access',
         'NSSystemAdministrationUsageDescription': 'Required for keyboard access',
     },
