@@ -36,9 +36,10 @@ OPTIONS = {
         'CFBundleShortVersionString': '0.1.0',
         'NSAppleEventsUsageDescription': 'wradAI uses AppleScript to copy and paste selected text.',
         'NSAccessibilityUsageDescription': 'wradAI needs keyboard access to detect your hotkey.',
-        'LSUIElement': True,
-        'NSAppleMusicUsageDescription': 'Required for keyboard access',
-        'NSSystemAdministrationUsageDescription': 'Required for keyboard access',
+        'LSUIElement': False,  # Changed to False to show in Dock
+        'NSHighResolutionCapable': True,
+        'CFBundleIconFile': 'AppIcon.icns',  # Add if you have an icon
+        'NSUIElement': False,  # Alternative to LSUIElement
     },
     'argv_emulation': False,
 }

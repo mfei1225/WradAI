@@ -9,7 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>wradAI</string>
 	<key>CFBundleIconFile</key>
-	<string>wradAI</string>
+	<string>AppIcon.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.yourdomain.wradAI</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -27,23 +27,23 @@
 	<key>LSHasLocalizedDisplayName</key>
 	<false/>
 	<key>LSUIElement</key>
-	<true/>
+	<false/>
 	<key>NSAccessibilityUsageDescription</key>
 	<string>wradAI needs keyboard access to detect your hotkey.</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>wradAI uses AppleScript to copy and paste selected text.</string>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>Required for keyboard access</string>
 	<key>NSAppleScriptEnabled</key>
 	<false/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright not specified</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSSystemAdministrationUsageDescription</key>
-	<string>Required for keyboard access</string>
+	<key>NSUIElement</key>
+	<false/>
 	<key>PyMainFileNames</key>
 	<array>
 		<string>__boot__</string>
